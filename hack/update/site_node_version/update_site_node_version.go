@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"minikube-hack/update"
+	"k8s.io/minikube/hack/update"
 
 	"github.com/google/go-github/v73/github"
 	"golang.org/x/mod/semver"
@@ -66,7 +66,7 @@ func main() {
 }
 
 func latestNodeVersionByMajor(ctx context.Context, major string) (string, error) {
-	ghc := github.NewClient(nil)
+	ghc := update.GHClient()
 
 	// walk through the paginated list of up to ghSearchLimit newest releases
 	opts := &github.ListOptions{PerPage: ghListPerPage}
