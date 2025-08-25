@@ -439,6 +439,11 @@ for the platforms that support it, we're testing:
 
 #### validatePersistentVolumeClaim
 makes sure PVCs work properly
+verifies at least one StorageClass exists
+Applies a PVC manifest (pvc.yaml) and verfies PVC named myclaim reaches phase Bound.
+Creates a test pod (sp-pod) that mounts the claim (via createPVTestPod).
+Writes a file foo to the mounted volume at /tmp/mount/foo.
+Deletes the pod, recreates it, and verifies the file foo still exists by listing /tmp/mount, proving data persists across pod restarts.
 
 #### validateTunnelCmd
 makes sure the minikube tunnel command works as expected
@@ -486,7 +491,7 @@ ensures ha (multi-control plane) cluster can start.
 deploys an app to ha (multi-control plane) cluster and ensures all nodes can serve traffic.
 
 #### validateHAPingHostFromPods
-uses app previously deplyed by validateDeployAppToHACluster to verify its pods, located on different nodes, can resolve "host.minikube.internal".
+uses app previously deployed by validateDeployAppToHACluster to verify its pods, located on different nodes, can resolve "host.minikube.internal".
 
 #### validateHAAddWorkerNode
 uses the minikube node add command to add a worker node to an existing ha (multi-control plane) cluster.
@@ -641,7 +646,7 @@ tests that the node name verification works as expected
 deploys an app to a multinode cluster and makes sure all nodes can serve traffic
 
 #### validatePodsPingHost
-uses app previously deplyed by validateDeployAppToMultiNode to verify its pods, located on different nodes, can resolve "host.minikube.internal".
+uses app previously deployed by validateDeployAppToMultiNode to verify its pods, located on different nodes, can resolve "host.minikube.internal".
 
 ## TestNetworkPlugins
 tests all supported CNI options

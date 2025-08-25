@@ -320,7 +320,7 @@ var Addons = map[string]*Addon{
 			"0640"),
 	}, false, "kong", "3rd party (Kong HQ)", "@gAmUssA", "https://minikube.sigs.k8s.io/docs/handbook/addons/kong-ingress/", map[string]string{
 		"Kong":        "kong:3.9.1@sha256:239292ac8d8dd4ba910862bec5595d2f84ddb9201430af1004e3b008af00917f",
-		"KongIngress": "kong/kubernetes-ingress-controller:3.5.0@sha256:02d58d47acb30d446c5e6f126026d87efcb7c5646bb7105bb8ae9123754eefe5",
+		"KongIngress": "kong/kubernetes-ingress-controller:3.5.1@sha256:4dc74b6fd7bcea07196900b53b6e1d5fabf6b7e56a7ed5d786e0d1c0ab950d1d",
 	}, map[string]string{
 		"Kong":        "docker.io",
 		"KongIngress": "docker.io",
@@ -332,7 +332,7 @@ var Addons = map[string]*Addon{
 			"pod.yaml",
 			"0640"),
 	}, false, "kubevirt", "3rd party (KubeVirt)", "", "https://minikube.sigs.k8s.io/docs/handbook/addons/kubevirt/", map[string]string{
-		"Kubectl": "bitnami/kubectl:1.33.3@sha256:cd354d5b25562b195b277125439c23e4046902d7f1abc0dc3c75aad04d298c17",
+		"Kubectl": "bitnami/kubectl:1.33.3@sha256:046830545ea21599c27342b7c55bcd0509cdea10d29bd19c098ef618fc14646d",
 	}, map[string]string{
 		"Kubectl": "docker.io",
 	}),
@@ -767,7 +767,7 @@ var Addons = map[string]*Addon{
 	"cloud-spanner": NewAddon([]*BinAsset{
 		MustBinAsset(addons.CloudSpanner, "cloud-spanner/deployment.yaml.tmpl", vmpath.GuestAddonsDir, "deployment.yaml", "0640"),
 	}, false, "cloud-spanner", "Google", "", "https://minikube.sigs.k8s.io/docs/handbook/addons/cloud-spanner/", map[string]string{
-		"CloudSpanner": "cloud-spanner-emulator/emulator:1.5.38@sha256:3b235876677d9e09fb1a52c4f10bf0aa005eb9f1f7f00ee5dc1213fa9be9c9b2",
+		"CloudSpanner": "cloud-spanner-emulator/emulator:1.5.39@sha256:7d251e954c025bccc599e604e0531c6041a8d036d9470c5938f1dd08a827fa7e",
 	}, map[string]string{
 		"CloudSpanner": "gcr.io",
 	}),
@@ -804,9 +804,9 @@ var Addons = map[string]*Addon{
 		MustBinAsset(addons.KubetailAssets, "kubetail/kubetail-cli.yaml", vmpath.GuestAddonsDir, "kubetail-cli.yaml", "0640"),
 	}, false, "kubetail", "3rd party (kubetail.com)", "amorey", "https://minikube.sigs.k8s.io/docs/handbook/addons/kubetail/",
 		map[string]string{
-			"KubetailDashboard":    "kubetail/kubetail-dashboard:0.6.0@sha256:fc8d01805c09f2ad3f5a2c94016e399ece4c03ff7275dc007a213281087490ac",
-			"KubetailClusterAPI":   "kubetail/kubetail-cluster-api:0.4.0@sha256:fec3154c589a31493f14ca5ecbbc48d3ad7bab6b5e30dcddabc2457bd297dae7",
-			"KubetailClusterAgent": "kubetail/kubetail-cluster-agent:0.4.0@sha256:5363ca1a5394943aa6bf4c160860a8dc616c3e939d2006cfa902f8863e182bae",
+			"KubetailDashboard":    "kubetail/kubetail-dashboard:0.6.3@sha256:0350addb95c0b135422cf766ef7ed31dd110b1fb87aa74a600fc10508c782cfa",
+			"KubetailClusterAPI":   "kubetail/kubetail-cluster-api:0.4.2@sha256:67ebae5543164147d21045bff3f77607914b9408d82526866a90c664814b7316",
+			"KubetailClusterAgent": "kubetail/kubetail-cluster-agent:0.4.2@sha256:09f72d4ae63ed6e105298a2a72d276f97a2c9954e2adaffe18389fc1a02353bf",
 		},
 		map[string]string{
 			"Kubetail": "docker.io",
