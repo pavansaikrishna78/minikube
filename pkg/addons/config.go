@@ -85,11 +85,6 @@ var Addons = []*Addon{
 		callbacks: []setFn{EnableOrDisableAddon},
 	},
 	{
-		name:      "istio-provisioner",
-		set:       SetBool,
-		callbacks: []setFn{EnableOrDisableAddon},
-	},
-	{
 		name:      "istio",
 		set:       SetBool,
 		callbacks: []setFn{EnableOrDisableAddon},

@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# Istioctl-based Istio uninstallation script for minikube
+# This removes Istio components installed via istioctl
+
+set -euo pipefail
+
+# Configuration
+KUBECONFIG="${KUBECONFIG:-/etc/kubernetes/admin.conf}"
+
+# Uninstall Istio using istioctl
+uninstall_istio() {
+    echo "Uninstalling Istio..."
+    
+    # Set kubeconfig
+    export KUBECONFIG="${KUBECONFIG}"
+    
+    # Check if istioctl is available
+    if ! command -v istioctl >/dev/null 2>&1; then
+        echo "Warning: istioctl not found. Performing manual cleanup..."
+        manual_cleanup
+        return
+    fi
+    
+    # Uninstall Istio control plane
+    echo "Removing Istio control plane..."
+    istioctl uninstall --purge -y 2>/dev/null || echo "Warning: istioctl uninstall failed, continuing with manual cleanup..."
+    
+    # Remove istio-system namespace
+    echo "Removing istio-system namespace..."
+    kubectl delete namespace istio-system --ignore-not-found=true
+    
+    # Remove Istio labels from namespaces
+    echo "Removing Istio injection labels..."
+    kubectl label namespace default istio-injection- --ignore-not-found=true
+    
+    # Remove Istio CRDs
+    echo "Removing Istio CRDs..."
+    kubectl delete crd -l app=istio-pilot --ignore-not-found=true
+    kubectl delete crd -l app=istio-citadel --ignore-not-found=true
+    kubectl delete crd -l app=istio-galley --ignore-not-found=true
+    kubectl delete crd -l app=istio-mixer --ignore-not-found=true
+    kubectl delete crd -l app=istio-proxy --ignore-not-found=true
+    kubectl delete crd -l app=istio --ignore-not-found=true
+    
+    echo "Istio uninstallation completed!"
+}
+
+# Manual cleanup in case istioctl is not available
+manual_cleanup() {
+    echo "Performing manual cleanup..."
+    
+    # Remove istio-system namespace (this will remove most resources)
+    kubectl delete namespace istio-system --ignore-not-found=true
+    
+    # Remove Istio CRDs
+    kubectl get crd -o name | grep -E '(istio\.io|install\.istio\.io)' | xargs kubectl delete --ignore-not-found=true
+    
+    # Remove labels
+    kubectl label namespace default istio-injection- --ignore-not-found=true
+    
+    # Remove any remaining Istio resources
+    kubectl delete validatingwebhookconfiguration istio-validator-istio-system --ignore-not-found=true
+    kubectl delete mutatingwebhookconfiguration istio-sidecar-injector --ignore-not-found=true
+    kubectl delete clusterrole istio-pilot-istio-system istio-citadel-istio-system istio-galley-istio-system istio-sidecar-injector-istio-system istio-mixer-istio-system --ignore-not-found=true
+    kubectl delete clusterrolebinding istio-pilot-istio-system istio-citadel-istio-system istio-galley-istio-system istio-sidecar-injector-admin-role-binding-istio-system istio-mixer-admin-role-binding-istio-system --ignore-not-found=true
+    
+    echo "Manual cleanup completed!"
+}
+
+# Main execution
+main() {
+    echo "Starting Istio uninstallation..."
+    uninstall_istio
+    echo "Istio addon uninstallation completed successfully!"
+}
+
+# Handle cleanup on script exit
+cleanup() {
+    local exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+        echo "Uninstallation failed with exit code $exit_code"
+        echo "You can check the logs above for details"
+    fi
+    exit $exit_code
+}
+
+trap cleanup EXIT
+
+# Execute main function
+main "$@"

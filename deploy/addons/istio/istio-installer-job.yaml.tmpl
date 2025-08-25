@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: istio-installer
+  namespace: istio-system
+  labels:
+    kubernetes.io/minikube-addons: istio
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  template:
+    metadata:
+      labels:
+        app: istio-installer
+    spec:
+      serviceAccountName: istio-installer
+      restartPolicy: OnFailure
+      containers:
+      - name: installer
+        image: {{.CustomRegistries.IstioctlInstaller | default .ImageRepository | default .Registries.IstioctlInstaller}}{{.Images.IstioctlInstaller}}
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: ISTIO_VERSION
+          value: "1.23.3"
+        - name: ISTIO_PROFILE  
+          value: "default"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -euo pipefail
+          
+          echo "Installing Istio ${ISTIO_VERSION} with profile: ${ISTIO_PROFILE}..."
+          
+          # Pre-check cluster readiness
+          echo "Checking cluster readiness..."
+          istioctl x precheck || echo "Pre-check warnings ignored"
+          
+          # Install Istio
+          echo "Installing Istio control plane..."
+          istioctl install \
+            --set values.defaultRevision=default \
+            --set values.pilot.env.EXTERNAL_ISTIOD=false \
+            --set values.global.meshID=mesh1 \
+            --set values.global.network=network1 \
+            --set values.global.hub=docker.io/istio \
+            --set values.global.tag=${ISTIO_VERSION} \
+            --set values.pilot.resources.requests.cpu=50m \
+            --set values.pilot.resources.requests.memory=128Mi \
+            --set values.global.proxy.resources.requests.cpu=10m \
+            --set values.global.proxy.resources.requests.memory=40Mi \
+            --set values.gateways.istio-ingressgateway.resources.requests.cpu=10m \
+            --set values.gateways.istio-ingressgateway.resources.requests.memory=40Mi \
+            -y
+          
+          # Label the default namespace for automatic sidecar injection
+          echo "Configuring default namespace for sidecar injection..."
+          kubectl label namespace default istio-injection=enabled --overwrite=true
+          
+          # Wait for Istio to be ready
+          echo "Waiting for Istio to be ready..."
+          kubectl wait --for=condition=Ready pods -l app=istiod -n istio-system --timeout=600s
+          
+          echo "Istio ${ISTIO_VERSION} installation completed successfully!"
+          
+          # Verify installation
+          echo "Verifying Istio installation..."
+          istioctl verify-install || echo "Verification completed with warnings"
+          
+          echo "Istio addon installation job completed!"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+  ttlSecondsAfterFinished: 100

@@ -55,12 +55,8 @@ var (
 	//go:embed ingress/*.tmpl
 	IngressAssets embed.FS
 
-	// IstioProvisionerAssets assets for istio-provisioner addon
-	//go:embed istio-provisioner/istio-operator.yaml.tmpl
-	IstioProvisionerAssets embed.FS
-
 	// IstioAssets assets for istio addon
-	//go:embed istio/istio-default-profile.yaml
+	//go:embed istio/*.yaml istio/*.tmpl
 	IstioAssets embed.FS
 
 	// InspektorGadgetAssets assets for inspektor-gadget addon

@@ -287,24 +287,22 @@ var Addons = map[string]*Addon{
 		"KubeWebhookCertgenCreate": "registry.k8s.io",
 		"KubeWebhookCertgenPatch":  "registry.k8s.io",
 	}),
-	"istio-provisioner": NewAddon([]*BinAsset{
-		MustBinAsset(addons.IstioProvisionerAssets,
-			"istio-provisioner/istio-operator.yaml.tmpl",
-			vmpath.GuestAddonsDir,
-			"istio-operator.yaml",
-			"0640"),
-	}, false, "istio-provisioner", "3rd party (Istio)", "", "https://istio.io/latest/docs/setup/platform-setup/minikube/", map[string]string{
-		"IstioOperator": "istio/operator:1.23.3@sha256:fcdc8f506f6b19b8265e6c8c28fa3d1c2f5b9069ad8ea6e1d8b353b233ec3079",
-	}, map[string]string{
-		"IstioOperator": "docker.io",
-	}),
 	"istio": NewAddon([]*BinAsset{
 		MustBinAsset(addons.IstioAssets,
-			"istio/istio-default-profile.yaml",
+			"istio/istio-namespace.yaml",
 			vmpath.GuestAddonsDir,
-			"istio-default-profile.yaml",
+			"istio-namespace.yaml",
 			"0640"),
-	}, false, "istio", "3rd party (Istio)", "", "https://istio.io/latest/docs/setup/platform-setup/minikube/", nil, nil),
+		MustBinAsset(addons.IstioAssets,
+			"istio/istio-installer-job.yaml.tmpl",
+			vmpath.GuestAddonsDir,
+			"istio-installer-job.yaml",
+			"0640"),
+	}, false, "istio", "3rd party (Istio)", "", "https://istio.io/latest/docs/setup/platform-setup/minikube/", map[string]string{
+		"IstioctlInstaller": "istio/istioctl:1.23.3",
+	}, map[string]string{
+		"IstioctlInstaller": "docker.io",
+	}),
 	"inspektor-gadget": NewAddon([]*BinAsset{
 		MustBinAsset(addons.InspektorGadgetAssets, "inspektor-gadget/ig-crd.yaml", vmpath.GuestAddonsDir, "ig-crd.yaml", "0640"),
 		MustBinAsset(addons.InspektorGadgetAssets, "inspektor-gadget/ig-deployment.yaml.tmpl", vmpath.GuestAddonsDir, "ig-deployment.yaml", "0640"),

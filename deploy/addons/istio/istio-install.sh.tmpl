@@ -1,0 +1,134 @@
+#!/bin/bash
+
+# Istioctl-based Istio installation script for minikube
+# This replaces the operator-based installation with istioctl
+
+set -euo pipefail
+
+# Configuration
+ISTIO_VERSION="${ISTIO_VERSION:-1.20.2}"
+ISTIO_PROFILE="${ISTIO_PROFILE:-default}"
+KUBECONFIG="${KUBECONFIG:-/etc/kubernetes/admin.conf}"
+
+# Download and install istioctl if not present
+download_istioctl() {
+    local arch
+    case "$(uname -m)" in
+        x86_64) arch="amd64" ;;
+        aarch64) arch="arm64" ;;
+        *) echo "Unsupported architecture: $(uname -m)"; exit 1 ;;
+    esac
+    
+    local os
+    case "$(uname -s)" in
+        Linux) os="linux" ;;
+        Darwin) os="osx" ;;
+        *) echo "Unsupported OS: $(uname -s)"; exit 1 ;;
+    esac
+    
+    local istioctl_url="https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/istioctl-${ISTIO_VERSION}-${os}-${arch}.tar.gz"
+    local temp_dir="/tmp/istioctl-${ISTIO_VERSION}"
+    
+    echo "Downloading istioctl ${ISTIO_VERSION}..."
+    mkdir -p "${temp_dir}"
+    curl -L "${istioctl_url}" | tar -xz -C "${temp_dir}"
+    
+    # Install to /usr/local/bin
+    chmod +x "${temp_dir}/istioctl"
+    mv "${temp_dir}/istioctl" /usr/local/bin/
+    rm -rf "${temp_dir}"
+    
+    echo "istioctl ${ISTIO_VERSION} installed successfully"
+}
+
+# Check if istioctl exists and has correct version
+check_istioctl() {
+    if command -v istioctl >/dev/null 2>&1; then
+        local current_version
+        current_version=$(istioctl version --client --short 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' || echo "unknown")
+        if [ "$current_version" = "$ISTIO_VERSION" ]; then
+            echo "istioctl ${ISTIO_VERSION} already installed"
+            return 0
+        else
+            echo "istioctl version mismatch. Expected: ${ISTIO_VERSION}, Found: ${current_version}"
+        fi
+    fi
+    return 1
+}
+
+# Install Istio using istioctl
+install_istio() {
+    echo "Installing Istio ${ISTIO_VERSION} with profile: ${ISTIO_PROFILE}..."
+    
+    # Pre-check cluster readiness
+    echo "Checking cluster readiness..."
+    istioctl x precheck
+    
+    # Install Istio
+    echo "Installing Istio control plane..."
+    istioctl install --set values.defaultRevision=default --set values.pilot.env.EXTERNAL_ISTIOD=false --set values.global.meshID=mesh1 --set values.global.network=network1 --set values.global.hub=docker.io/istio --set values.global.tag=${ISTIO_VERSION} -y
+    
+    # Label the default namespace for automatic sidecar injection
+    echo "Configuring default namespace for sidecar injection..."
+    kubectl label namespace default istio-injection=enabled --overwrite=true
+    
+    # Wait for Istio to be ready
+    echo "Waiting for Istio to be ready..."
+    kubectl wait --for=condition=Ready pods -l app=istiod -n istio-system --timeout=300s
+    
+    echo "Istio ${ISTIO_VERSION} installation completed successfully!"
+}
+
+# Verify installation
+verify_installation() {
+    echo "Verifying Istio installation..."
+    
+    # Check istioctl version
+    echo "istioctl version:"
+    istioctl version
+    
+    # Check Istio pods
+    echo "Istio system pods:"
+    kubectl get pods -n istio-system
+    
+    # Verify installation
+    istioctl verify-install
+    
+    echo "Istio installation verification completed!"
+}
+
+# Main execution
+main() {
+    echo "Starting Istio installation with istioctl..."
+    
+    # Set kubeconfig
+    export KUBECONFIG="${KUBECONFIG}"
+    
+    # Check and install istioctl if needed
+    if ! check_istioctl; then
+        download_istioctl
+    fi
+    
+    # Install Istio
+    install_istio
+    
+    # Verify installation
+    verify_installation
+    
+    echo "Istio addon installation completed successfully!"
+}
+
+# Handle cleanup on script exit
+cleanup() {
+    local exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+        echo "Installation failed with exit code $exit_code"
+        echo "You can check the logs above for details"
+    fi
+    exit $exit_code
+}
+
+trap cleanup EXIT
+
+# Execute main function
+main "$@"
